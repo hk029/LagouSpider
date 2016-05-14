@@ -12,14 +12,24 @@ class LagoupositonSpider(scrapy.Spider):
     # )
     totalPageCount = 0
     curpage = 1
-    myurl = 'http://www.lagou.com/jobs/positionAjax.json?px=new'
+    cur = 0
+    myurl = 'http://www.lagou.com/jobs/positionAjax.json?'
     city = u'北京'
-    kd = u'大数据'
+    kds = [u'java','python','PHP','.NET','JavaScript','C#','C++','C','VB','Dephi','Perl','Ruby','Go','ASP','Shell']
+    # ['Node.js',u'数据挖掘',u'自然语言处理',u'搜索算法',u'精准推荐',u'全栈工程师']
+    # ['HTML5','Android','iOS',u'web前端','Flash','U3D','COCOS2D-X']
+    # [u'spark','MySQL','SQLServer','Oracle','DB2','MongoDB' 'ETL','Hive',u'数据仓库','Hadoop']
+    kd = kds[0]
     def start_requests(self):
-        return [scrapy.http.FormRequest(self.myurl,
+        # for self.kd in self.kds:
+        #
+        #     scrapy.http.FormRequest(self.myurl,
+        #                                 formdata={'pn':str(self.curpage),'kd':self.kd},callback=self.parse)
+         return [scrapy.http.FormRequest(self.myurl,
                                         formdata={'pn':str(self.curpage),'kd':self.kd},callback=self.parse)]
 
     def parse(self, response):
+        #print response.body
         # fp = open('1.html','w')
         # fp.write(response.body)
         item = LagouItem()
@@ -46,8 +56,17 @@ class LagoupositonSpider(scrapy.Spider):
             item['salaryMin'] = int(sal[0][:sal[0].find('k')])
             item['positionAdvantage'] = each['positionAdvantage']
             item['companyLabelList'] = each['companyLabelList']
+            item['keyword'] = self.kd
             yield item
         if self.curpage <= self.totalPageCount:
             self.curpage += 1
             yield scrapy.http.FormRequest(self.myurl,
-                                        formdata={'pn':str(self.curpage),'kd':self.kd},callback=self.parse)
+                                        formdata = {'pn': str(self.curpage), 'kd': self.kd},callback=self.parse)
+        elif self.cur < len(self.kds)-1:
+            self.curpage = 1
+            self.totalPageCount = 0
+            self.cur += 1
+            self.kd = self.kds[self.cur]
+            yield scrapy.http.FormRequest(self.myurl,
+                                        formdata = {'pn': str(self.curpage), 'kd': self.kd},callback=self.parse)
+

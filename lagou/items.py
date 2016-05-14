@@ -20,4 +20,5 @@ class LagouItem(scrapy.Item):
     positionType = scrapy.Field()
     positionAdvantage = scrapy.Field()
     companyLabelList = scrapy.Field()
+    keyword = scrapy.Field()
 
