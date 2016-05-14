@@ -12,10 +12,12 @@ class LagoupositonSpider(scrapy.Spider):
     # )
     totalPageCount = 0
     curpage = 1
-
+    myurl = 'http://www.lagou.com/jobs/positionAjax.json?px=new'
+    city = u'北京'
+    kd = u'大数据'
     def start_requests(self):
-        return [scrapy.http.FormRequest('http://www.lagou.com/jobs/positionAjax.json?px=new&city=%E5%8C%97%E4%BA%AC',
-                                        formdata={'pn':str(self.curpage),'kd':'大数据'},callback=self.parse)]
+        return [scrapy.http.FormRequest(self.myurl,
+                                        formdata={'pn':str(self.curpage),'kd':self.kd},callback=self.parse)]
 
     def parse(self, response):
         # fp = open('1.html','w')
@@ -26,19 +28,26 @@ class LagoupositonSpider(scrapy.Spider):
         jposresult = jcontent["positionResult"]
         jresult = jposresult["result"]
         self.totalPageCount = jposresult['totalCount'] /15 + 1;
-        if  self.totalPageCount > 30:
-            self.totalPageCount = 30;
+        # if self.totalPageCount > 30:
+        #     self.totalPageCount = 30;
         for each in jresult:
             item['city']=each['city']
             item['companyName'] = each['companyName']
-            item['companySize'] =  each['companySize']
+            item['companySize'] = each['companySize']
             item['positionName'] = each['positionName']
             item['positionType'] = each['positionType']
-            item['salary'] = each['salary']
+            sal = each['salary']
+            sal = sal.split('-')
+            print sal
+            if len(sal) == 1:
+                item['salaryMax'] = int(sal[0][:sal[0].find('k')])
+            else:
+                item['salaryMax'] = int(sal[1][:sal[1].find('k')])
+            item['salaryMin'] = int(sal[0][:sal[0].find('k')])
             item['positionAdvantage'] = each['positionAdvantage']
             item['companyLabelList'] = each['companyLabelList']
             yield item
         if self.curpage <= self.totalPageCount:
             self.curpage += 1
-            yield scrapy.http.FormRequest('http://www.lagou.com/jobs/positionAjax.json?px=new&city=%E5%8C%97%E4%BA%AC',
-                                        formdata={'pn':str(self.curpage),'kd':'大数据'},callback=self.parse)
+            yield scrapy.http.FormRequest(self.myurl,
+                                        formdata={'pn':str(self.curpage),'kd':self.kd},callback=self.parse)
