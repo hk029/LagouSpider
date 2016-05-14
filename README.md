@@ -15,6 +15,6 @@ LagouSpider是一个scrapy爬虫，它实现的功能是爬取动态网页，Lag
   1.爬取Lagou网的职位信息（单页）
 
 
-用法
+#用法
 
 在setting.py中修改csv保存的路径，然后运行python main.py
