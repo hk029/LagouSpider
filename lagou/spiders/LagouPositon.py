@@ -7,36 +7,41 @@ from lagou.items import LagouItem
 class LagoupositonSpider(scrapy.Spider):
     name = "LagouPositon"
     #allowed_domains = ["lagou.com/zhaopin/"]
-    # start_urls = (
-    #     'http://www.lagou.com/jobs/positionAjax.json?gj=%E5%BA%94%E5%B1%8A%E6%AF%95%E4%B8%9A%E7%94%9F&xl=%E5%A4%A7%E4%B8%93&jd=%E6%88%90%E9%95%BF%E5%9E%8B&hy=%E7%A7%BB%E5%8A%A8%E4%BA%92%E8%81%94%E7%BD%91&px=new&city=%E4%B8%8A%E6%B5%B7',
-    # )
+    start_urls = (
+        'http://www.lagou.com/zhaopin/'
+    )
     totalPageCount = 0
     curpage = 1
     cur = 0
     myurl = 'http://www.lagou.com/jobs/positionAjax.json?'
+
     city = u'北京'
-    kds = [u'java','python','PHP','.NET','JavaScript','C#','C++','C','VB','Dephi','Perl','Ruby','Go','ASP','Shell']
-    # ['Node.js',u'数据挖掘',u'自然语言处理',u'搜索算法',u'精准推荐',u'全栈工程师']
-    # ['HTML5','Android','iOS',u'web前端','Flash','U3D','COCOS2D-X']
-    # [u'spark','MySQL','SQLServer','Oracle','DB2','MongoDB' 'ETL','Hive',u'数据仓库','Hadoop']
+    #kds = [u'java','python','PHP','.NET','JavaScript','C#','C++','C','VB','Dephi','Perl','Ruby','Go','ASP','Shell']
+    kds = [u'大数据',u'云计算',u'docker',u'中间件','Node.js',u'数据挖掘',u'自然语言处理',u'搜索算法',u'精准推荐',u'全栈工程师',u'图像处理',u'机器学习',u'语音识别']
+    #kds = ['HTML5','Android','iOS',u'web前端','Flash','U3D','COCOS2D-X']
+    #kds = [u'spark','MySQL','SQLServer','Oracle','DB2','MongoDB' 'ETL','Hive',u'数据仓库','Hadoop']
+    #kds = [u'大数据',u'云计算',u'docker',u'中间件']
     kd = kds[0]
     def start_requests(self):
         # for self.kd in self.kds:
         #
         #     scrapy.http.FormRequest(self.myurl,
         #                                 formdata={'pn':str(self.curpage),'kd':self.kd},callback=self.parse)
+
+         #查询特定关键词的内容，通过request
          return [scrapy.http.FormRequest(self.myurl,
                                         formdata={'pn':str(self.curpage),'kd':self.kd},callback=self.parse)]
 
     def parse(self, response):
-        #print response.body
-        # fp = open('1.html','w')
-        # fp.write(response.body)
+        print response.body
+        fp = open('1.html','w')
+        fp.write(response.body)
         item = LagouItem()
         jdict = json.loads(response.body)
         jcontent = jdict["content"]
         jposresult = jcontent["positionResult"]
         jresult = jposresult["result"]
+        #计算总页数，取消30页的限制
         self.totalPageCount = jposresult['totalCount'] /15 + 1;
         # if self.totalPageCount > 30:
         #     self.totalPageCount = 30;
@@ -48,12 +53,14 @@ class LagoupositonSpider(scrapy.Spider):
             item['positionType'] = each['positionType']
             sal = each['salary']
             sal = sal.split('-')
-            print sal
+            #print sal
+            #把工资字符串（ak-bk）转成最大和最小值(a,b)
             if len(sal) == 1:
                 item['salaryMax'] = int(sal[0][:sal[0].find('k')])
             else:
                 item['salaryMax'] = int(sal[1][:sal[1].find('k')])
             item['salaryMin'] = int(sal[0][:sal[0].find('k')])
+            item['salaryAvg'] = (item['salaryMin'] + item['salaryMax'])/2
             item['positionAdvantage'] = each['positionAdvantage']
             item['companyLabelList'] = each['companyLabelList']
             item['keyword'] = self.kd

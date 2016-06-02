@@ -17,6 +17,7 @@ class LagouItem(scrapy.Item):
     positionName = scrapy.Field()
     salaryMax = scrapy.Field()
     salaryMin = scrapy.Field()
+    salaryAvg = scrapy.Field()
     positionType = scrapy.Field()
     positionAdvantage = scrapy.Field()
     companyLabelList = scrapy.Field()
